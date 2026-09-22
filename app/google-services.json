@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "34652979393",
+    "project_id": "xtride-7cf54",
+    "storage_bucket": "xtride-7cf54.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:34652979393:android:2065b21d18008301e8d440",
+        "android_client_info": {
+          "package_name": "com.example.xtride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCryOUX_Hx1rklKDyFY8ILGjl6cJva8wDY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
