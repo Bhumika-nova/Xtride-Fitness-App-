@@ -61,6 +61,15 @@ Offline and Private
 • Workout saving is designed to work without loading delays or network dependency
 • GPS routes and health data remain on the device and are not uploaded or sold to third party advertising networks
 
+## 📱 UI Screens
+
+<p align="center">
+  <img src="Clip%20path%20group.png" width="200">
+  <img src="Clip%20path%20group-1.png" width="200">
+  <img src="Clip%20path%20group-2.png" width="200">
+  <img src="Clip%20path%20group-3.png" width="200">
+</p>
+
 TECHNOLOGY STACK
 
 Language:
