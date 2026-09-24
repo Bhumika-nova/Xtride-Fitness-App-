@@ -213,7 +213,11 @@ fun RegisterScreen(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable { onContinueOffline() }
+                    .clickable {
+                        viewModel.continueOffline {
+                            onContinueOffline()
+                        }
+                    }
                     .padding(8.dp)
             )
 

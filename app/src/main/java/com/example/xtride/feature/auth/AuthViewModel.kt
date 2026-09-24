@@ -18,15 +18,18 @@ sealed interface AuthUiState {
     data class Error(val message: String) : AuthUiState
     object OnboardingComplete : AuthUiState
 }
+
 class AuthViewModel(
     private val authRepo: AuthRepository,
     private val userProfileRepo: UserProfileRepository
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow<AuthUiState>(
         if (authRepo.currentUser != null) AuthUiState.Authenticated(authRepo.currentUser!!)
         else AuthUiState.Idle
     )
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
     fun login(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _uiState.value = AuthUiState.Error("Please fill in all fields")
@@ -36,12 +39,29 @@ class AuthViewModel(
             _uiState.value = AuthUiState.Loading
             val result = authRepo.loginWithEmail(email, pass)
             result.onSuccess { user ->
+                val existing = userProfileRepo.getProfile()
+                if (existing == null) {
+                    userProfileRepo.saveProfile(
+                        UserProfileEntity(
+                            firebaseUid = user.uid,
+                            fullName = user.displayName.ifBlank { "Athlete" },
+                            email = user.email,
+                            photoUrl = user.photoUrl,
+                            heightCm = 170f,
+                            weightKg = 68f,
+                            age = 25,
+                            gender = "Not specified",
+                            dailyStepGoal = 6000
+                        )
+                    )
+                }
                 _uiState.value = AuthUiState.Authenticated(user)
             }.onFailure { error ->
                 _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Login failed")
             }
         }
     }
+
     fun signUp(name: String, email: String, pass: String, confirmPass: String) {
         if (name.isBlank() || email.isBlank() || pass.isBlank()) {
             _uiState.value = AuthUiState.Error("Please fill in all fields")
@@ -65,6 +85,29 @@ class AuthViewModel(
             }
         }
     }
+
+    fun continueOffline(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val existing = userProfileRepo.getProfile()
+            if (existing == null) {
+                userProfileRepo.saveProfile(
+                    UserProfileEntity(
+                        firebaseUid = "offline_athlete",
+                        fullName = "Athlete",
+                        email = "athlete@xtride.local",
+                        photoUrl = null,
+                        heightCm = 170f,
+                        weightKg = 68f,
+                        age = 25,
+                        gender = "Not specified",
+                        dailyStepGoal = 6000
+                    )
+                )
+            }
+            onSuccess()
+        }
+    }
+
     fun saveOnboardingProfile(
         heightCm: Float,
         weightKg: Float,
@@ -76,8 +119,8 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             val entity = UserProfileEntity(
-                firebaseUid = user?.uid ?: "local_guest_user",
-                fullName = user?.displayName ?: "xtride Athlete",
+                firebaseUid = user?.uid ?: "offline_athlete",
+                fullName = user?.displayName ?: "Athlete",
                 email = user?.email ?: "athlete@xtride.local",
                 photoUrl = user?.photoUrl,
                 heightCm = heightCm,
@@ -91,16 +134,33 @@ class AuthViewModel(
             _uiState.value = AuthUiState.OnboardingComplete
         }
     }
+
     fun resetState() {
         _uiState.value = AuthUiState.Idle
     }
 
-    // google
+    // Google Sign-In
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             val result = authRepo.loginWithGoogle(idToken)
             result.onSuccess { user ->
+                val existing = userProfileRepo.getProfile()
+                if (existing == null) {
+                    userProfileRepo.saveProfile(
+                        UserProfileEntity(
+                            firebaseUid = user.uid,
+                            fullName = user.displayName.ifBlank { "Athlete" },
+                            email = user.email,
+                            photoUrl = user.photoUrl,
+                            heightCm = 170f,
+                            weightKg = 68f,
+                            age = 25,
+                            gender = "Not specified",
+                            dailyStepGoal = 6000
+                        )
+                    )
+                }
                 _uiState.value = AuthUiState.Authenticated(user)
             }.onFailure { error ->
                 _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Google sign in failed")

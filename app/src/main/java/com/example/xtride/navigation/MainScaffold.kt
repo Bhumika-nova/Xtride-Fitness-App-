@@ -1,42 +1,55 @@
 package com.example.xtride.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.xtride.data.repository.StepRepository
+import com.example.xtride.data.repository.UserProfileRepository
+import com.example.xtride.data.sensor.StepSensorManager
+import com.example.xtride.feature.home.HomeScreen
+import com.example.xtride.feature.home.HomeViewModel
 import com.example.xtride.feature.placeholder.AnalyticsScreenPlaceholder
-import com.example.xtride.feature.placeholder.HomeScreenPlaceholder
 import com.example.xtride.feature.placeholder.ProfileScreenPlaceholder
 import com.example.xtride.feature.placeholder.WorkoutScreenPlaceholder
 
 @Composable
-fun MainScaffold() {
+fun MainScaffold(
+    stepRepo: StepRepository,
+    userProfileRepo: UserProfileRepository,
+    sensorManager: StepSensorManager?
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val homeViewModel = remember {
+        HomeViewModel(
+            stepRepo = stepRepo,
+            userProfileRepo = userProfileRepo,
+            sensorManager = sensorManager
+        )
+    }
+
     val screens = listOf(
         Screen.Home,
         Screen.Workout,
         Screen.Analytics,
         Screen.Profile
     )
+
     Scaffold(
+        containerColor = Color(0xFF040711),
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = Color(0xFF0A0F1D),
                 tonalElevation = 8.dp
             ) {
                 screens.forEach { screen ->
@@ -64,9 +77,11 @@ fun MainScaffold() {
                             Text(text = screen.title)
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                            selectedIconColor = Color(0xFFE11D48),
+                            selectedTextColor = Color(0xFFE11D48),
+                            unselectedIconColor = Color(0xFF64748B),
+                            unselectedTextColor = Color(0xFF64748B),
+                            indicatorColor = Color(0xFFE11D48).copy(alpha = 0.15f)
                         )
                     )
                 }
@@ -78,7 +93,20 @@ fun MainScaffold() {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { HomeScreenPlaceholder() }
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    viewModel = homeViewModel,
+                    onNavigateToProfile = {
+                        navController.navigate(Screen.Profile.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
             composable(Screen.Workout.route) { WorkoutScreenPlaceholder() }
             composable(Screen.Analytics.route) { AnalyticsScreenPlaceholder() }
             composable(Screen.Profile.route) { ProfileScreenPlaceholder() }
