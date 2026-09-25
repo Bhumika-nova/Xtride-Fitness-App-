@@ -45,7 +45,7 @@ class HomeViewModel(
                 profile?.let {
                     _uiState.update { state ->
                         state.copy(
-                            userName = it.fullName.ifBlank { "Athlete" },
+                            userName = it.fullName.ifBlank { it.email.substringBefore("@").ifBlank { "Athlete" } },
                             dailyGoal = it.dailyStepGoal
                         )
                     }

@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class WorkoutEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: String = "offline_athlete", // Scoped to individual user account
     val exerciseName: String,
     val weightKg: Float,
     val reps: Int,

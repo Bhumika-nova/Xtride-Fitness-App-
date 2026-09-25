@@ -41,19 +41,30 @@ import com.google.android.gms.common.api.ApiException
 fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit,
-    onContinueOffline: () -> Unit = onLoginSuccess
+    onLoginSuccess: () -> Unit
 ) {
     val context = LocalContext.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
+    var googleErrorMessage by remember { mutableStateOf<String?>(null) }
 
-    val googleSignInClient = remember(context) {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+    val webClientId = remember(context) {
+        try {
+            val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+            if (resId != 0) context.getString(resId) else ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    val googleSignInClient = remember(context, webClientId) {
+        val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .build()
-        GoogleSignIn.getClient(context, gso)
+        if (webClientId.isNotEmpty()) {
+            builder.requestIdToken(webClientId)
+        }
+        GoogleSignIn.getClient(context, builder.build())
     }
 
     val googleLauncher = rememberLauncherForActivityResult(
@@ -64,14 +75,19 @@ fun LoginScreen(
             try {
                 val account = task.getResult(ApiException::class.java)
                 val idToken = account.idToken
-                if (idToken != null) {
+                if (!idToken.isNullOrEmpty()) {
+                    googleErrorMessage = null
                     viewModel.loginWithGoogle(idToken)
                 } else {
-                    // Fallback when client ID isn't linked yet: allow immediate login
-                    onLoginSuccess()
+                    googleErrorMessage = "No ID token returned. Make sure Google Sign-In is enabled in Firebase Console and google-services.json is updated."
                 }
             } catch (e: ApiException) {
-                // If Google play services returns error, fallback cleanly
+                googleErrorMessage = when (e.statusCode) {
+                    10 -> "Developer Error (code 10): Ensure SHA-1 is added to Firebase Console and google-services.json is replaced."
+                    12500 -> "Sign-in configuration error (code 12500). Please check Firebase settings."
+                    12501 -> null // User dismissed Google dialog
+                    else -> "Google Sign-In failed (${e.statusCode}): ${e.localizedMessage ?: "Unknown error"}"
+                }
             }
         }
     }
@@ -159,6 +175,7 @@ fun LoginScreen(
                     )
                     .background(Color(0xFF0A0F1D))
                     .clickable {
+                        googleErrorMessage = null
                         googleSignInClient.signOut().addOnCompleteListener {
                             googleLauncher.launch(googleSignInClient.signInIntent)
                         }
@@ -226,13 +243,26 @@ fun LoginScreen(
             )
 
             // Error Display
-            if (uiState is AuthUiState.Error) {
-                Text(
-                    text = (uiState as AuthUiState.Error).message,
-                    color = Color(0xFFFB7185),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 10.dp)
-                )
+            val displayError = (uiState as? AuthUiState.Error)?.message ?: googleErrorMessage
+            if (displayError != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 14.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE11D48).copy(alpha = 0.15f))
+                        .border(1.dp, Color(0xFFE11D48).copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = displayError,
+                        color = Color(0xFFFB7185),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -267,29 +297,11 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 6. "Continue in Offline Mode" Link
-            Text(
-                text = "Continue in Offline Mode",
-                color = Color(0xFF94A3B8),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        viewModel.continueOffline {
-                            onContinueOffline()
-                        }
-                    }
-                    .padding(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 7. Create Account Redirect
+            // Create Account Redirect
             Text(
                 text = "Don't have an account? Sign Up",
                 color = Color(0xFFE11D48),
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -297,7 +309,7 @@ fun LoginScreen(
                         viewModel.resetState()
                         onNavigateToRegister()
                     }
-                    .padding(6.dp)
+                    .padding(8.dp)
             )
         }
     }

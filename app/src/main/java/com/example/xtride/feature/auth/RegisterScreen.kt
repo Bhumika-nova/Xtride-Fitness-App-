@@ -33,13 +33,13 @@ import androidx.compose.ui.unit.sp
 fun RegisterScreen(
     viewModel: AuthViewModel,
     onNavigateToLogin: () -> Unit,
-    onRegistrationSuccess: () -> Unit,
-    onContinueOffline: () -> Unit = onRegistrationSuccess
+    onRegistrationSuccess: () -> Unit
 ) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var selectedGender by remember { mutableStateOf("Female") }
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
@@ -163,21 +163,80 @@ fun RegisterScreen(
                 keyboardType = KeyboardType.Password
             )
 
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Gender Selector
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Gender",
+                    color = Color(0xFF94A3B8),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                )
+
+                val genderOptions = listOf("Female", "Male", "Other")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    genderOptions.forEach { option ->
+                        val isSelected = selectedGender.equals(option, ignoreCase = true)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (isSelected) Color(0xFFE11D48) else Color(0xFF131826))
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) Color(0xFFFB7185) else Color(0xFF232D42),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
+                                .clickable { selectedGender = option },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = option,
+                                color = if (isSelected) Color.White else Color(0xFF94A3B8),
+                                fontSize = 13.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+
             // Error Display
             if (uiState is AuthUiState.Error) {
-                Text(
-                    text = (uiState as AuthUiState.Error).message,
-                    color = Color(0xFFFB7185),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 10.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 14.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFE11D48).copy(alpha = 0.15f))
+                        .border(1.dp, Color(0xFFE11D48).copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = (uiState as AuthUiState.Error).message,
+                        color = Color(0xFFFB7185),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
 
             // 6. "Sign Up for xtride" Primary Crimson Pill Button
             Button(
-                onClick = { viewModel.signUp(fullName, email, password, confirmPassword) },
+                onClick = { viewModel.signUp(fullName, email, password, confirmPassword, selectedGender) },
                 enabled = uiState !is AuthUiState.Loading,
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -205,29 +264,11 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Continue in Offline Mode
-            Text(
-                text = "Continue in Offline Mode",
-                color = Color(0xFF94A3B8),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        viewModel.continueOffline {
-                            onContinueOffline()
-                        }
-                    }
-                    .padding(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // 7. Switch to Login Redirect
+            // Switch to Login Redirect
             Text(
                 text = "Already have an account? Sign In",
                 color = Color(0xFFE11D48),
-                fontSize = 13.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -235,7 +276,7 @@ fun RegisterScreen(
                         viewModel.resetState()
                         onNavigateToLogin()
                     }
-                    .padding(6.dp)
+                    .padding(8.dp)
             )
 
             Spacer(modifier = Modifier.height(16.dp))

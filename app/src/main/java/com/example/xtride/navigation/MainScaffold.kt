@@ -11,14 +11,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.xtride.data.repository.AuthRepository
 import com.example.xtride.data.repository.StepRepository
 import com.example.xtride.data.repository.UserProfileRepository
 import com.example.xtride.data.repository.WorkoutRepository
 import com.example.xtride.data.sensor.StepSensorManager
+import com.example.xtride.feature.analytics.AnalyticsScreen
+import com.example.xtride.feature.analytics.AnalyticsViewModel
 import com.example.xtride.feature.home.HomeScreen
 import com.example.xtride.feature.home.HomeViewModel
-import com.example.xtride.feature.placeholder.AnalyticsScreenPlaceholder
-import com.example.xtride.feature.placeholder.ProfileScreenPlaceholder
+import com.example.xtride.feature.profile.ProfileScreen
+import com.example.xtride.feature.profile.ProfileViewModel
 import com.example.xtride.feature.workout.WorkoutScreen
 import com.example.xtride.feature.workout.WorkoutViewModel
 
@@ -27,7 +30,9 @@ fun MainScaffold(
     stepRepo: StepRepository,
     userProfileRepo: UserProfileRepository,
     workoutRepo: WorkoutRepository,
-    sensorManager: StepSensorManager?
+    sensorManager: StepSensorManager?,
+    authRepo: AuthRepository? = null,
+    onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -43,6 +48,20 @@ fun MainScaffold(
 
     val workoutViewModel = remember {
         WorkoutViewModel(workoutRepo = workoutRepo)
+    }
+
+    val analyticsViewModel = remember {
+        AnalyticsViewModel(
+            stepRepo = stepRepo,
+            workoutRepo = workoutRepo
+        )
+    }
+
+    val profileViewModel = remember {
+        ProfileViewModel(
+            userProfileRepo = userProfileRepo,
+            authRepo = authRepo
+        )
     }
 
     val screens = listOf(
@@ -117,8 +136,15 @@ fun MainScaffold(
             composable(Screen.Workout.route) {
                 WorkoutScreen(viewModel = workoutViewModel)
             }
-            composable(Screen.Analytics.route) { AnalyticsScreenPlaceholder() }
-            composable(Screen.Profile.route) { ProfileScreenPlaceholder() }
+            composable(Screen.Analytics.route) {
+                AnalyticsScreen(viewModel = analyticsViewModel)
+            }
+            composable(Screen.Profile.route) {
+                ProfileScreen(
+                    viewModel = profileViewModel,
+                    onLogout = onLogout
+                )
+            }
         }
     }
 }

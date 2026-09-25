@@ -32,8 +32,8 @@ class MainActivity : ComponentActivity() {
         // Initialize Local Room Database, Repositories & Sensor Manager
         val database = AppDatabase.getInstance(applicationContext)
         val userProfileRepo = UserProfileRepository(database.userProfileDao())
-        val stepRepo = StepRepository(database.dailyStepsDao())
-        val workoutRepo = WorkoutRepository(database.workoutDao())
+        val stepRepo = StepRepository(database.dailyStepsDao(), userProfileRepo)
+        val workoutRepo = WorkoutRepository(database.workoutDao(), userProfileRepo)
         val authRepo = AuthRepository()
         val sensorManager = StepSensorManager(applicationContext)
 
@@ -46,12 +46,10 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(authRepo.currentUser != null)
                 }
 
-                // Check Room SQLite active profile as well so sessions stay permanently logged in
+                // Strictly enforce authenticated user session (no offline bypass)
                 LaunchedEffect(Unit) {
                     userProfileRepo.activeUserProfile.collect { profile ->
-                        if (profile != null || authRepo.currentUser != null) {
-                            isLoggedIn = true
-                        }
+                        isLoggedIn = authRepo.currentUser != null && profile != null && profile.firebaseUid != "offline_athlete"
                     }
                 }
 
@@ -66,7 +64,11 @@ class MainActivity : ComponentActivity() {
                         stepRepo = stepRepo,
                         userProfileRepo = userProfileRepo,
                         workoutRepo = workoutRepo,
-                        sensorManager = sensorManager
+                        sensorManager = sensorManager,
+                        authRepo = authRepo,
+                        onLogout = {
+                            isLoggedIn = false
+                        }
                     )
                 } else {
                     AuthFlow(

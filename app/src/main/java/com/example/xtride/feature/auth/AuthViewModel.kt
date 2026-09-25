@@ -39,30 +39,36 @@ class AuthViewModel(
             _uiState.value = AuthUiState.Loading
             val result = authRepo.loginWithEmail(email, pass)
             result.onSuccess { user ->
-                val existing = userProfileRepo.getProfile()
-                if (existing == null) {
-                    userProfileRepo.saveProfile(
-                        UserProfileEntity(
-                            firebaseUid = user.uid,
-                            fullName = user.displayName.ifBlank { "Athlete" },
-                            email = user.email,
-                            photoUrl = user.photoUrl,
-                            heightCm = 170f,
-                            weightKg = 68f,
-                            age = 25,
-                            gender = "Not specified",
-                            dailyStepGoal = 6000
-                        )
-                    )
-                }
+                syncUserProfile(user)
                 _uiState.value = AuthUiState.Authenticated(user)
             }.onFailure { error ->
-                _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Login failed")
+                val msg = error.localizedMessage.orEmpty()
+                val userFriendlyMessage = when {
+                    error is com.google.firebase.auth.FirebaseAuthInvalidUserException ||
+                    msg.contains("no user record", ignoreCase = true) ||
+                    msg.contains("user-not-found", ignoreCase = true) -> {
+                        "No account found with this email. Please sign up before logging in."
+                    }
+                    error is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ||
+                    msg.contains("invalid-credential", ignoreCase = true) ||
+                    msg.contains("wrong-password", ignoreCase = true) ||
+                    msg.contains("password", ignoreCase = true) -> {
+                        "Incorrect email or password. If you don't have an account, please sign up first."
+                    }
+                    error is com.google.firebase.FirebaseNetworkException ||
+                    msg.contains("network", ignoreCase = true) -> {
+                        "Network error. Please check your internet connection and try again."
+                    }
+                    else -> {
+                        error.localizedMessage ?: "Authentication failed. Please sign up or try again."
+                    }
+                }
+                _uiState.value = AuthUiState.Error(userFriendlyMessage)
             }
         }
     }
 
-    fun signUp(name: String, email: String, pass: String, confirmPass: String) {
+    fun signUp(name: String, email: String, pass: String, confirmPass: String, gender: String = "Female") {
         if (name.isBlank() || email.isBlank() || pass.isBlank()) {
             _uiState.value = AuthUiState.Error("Please fill in all fields")
             return
@@ -79,32 +85,11 @@ class AuthViewModel(
             _uiState.value = AuthUiState.Loading
             val result = authRepo.signUpWithEmail(name, email, pass)
             result.onSuccess { user ->
+                syncUserProfile(user, gender)
                 _uiState.value = AuthUiState.Authenticated(user)
             }.onFailure { error ->
                 _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Sign up failed")
             }
-        }
-    }
-
-    fun continueOffline(onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            val existing = userProfileRepo.getProfile()
-            if (existing == null) {
-                userProfileRepo.saveProfile(
-                    UserProfileEntity(
-                        firebaseUid = "offline_athlete",
-                        fullName = "Athlete",
-                        email = "athlete@xtride.local",
-                        photoUrl = null,
-                        heightCm = 170f,
-                        weightKg = 68f,
-                        age = 25,
-                        gender = "Not specified",
-                        dailyStepGoal = 6000
-                    )
-                )
-            }
-            onSuccess()
         }
     }
 
@@ -145,26 +130,39 @@ class AuthViewModel(
             _uiState.value = AuthUiState.Loading
             val result = authRepo.loginWithGoogle(idToken)
             result.onSuccess { user ->
-                val existing = userProfileRepo.getProfile()
-                if (existing == null) {
-                    userProfileRepo.saveProfile(
-                        UserProfileEntity(
-                            firebaseUid = user.uid,
-                            fullName = user.displayName.ifBlank { "Athlete" },
-                            email = user.email,
-                            photoUrl = user.photoUrl,
-                            heightCm = 170f,
-                            weightKg = 68f,
-                            age = 25,
-                            gender = "Not specified",
-                            dailyStepGoal = 6000
-                        )
-                    )
-                }
+                syncUserProfile(user)
                 _uiState.value = AuthUiState.Authenticated(user)
             }.onFailure { error ->
                 _uiState.value = AuthUiState.Error(error.localizedMessage ?: "Google sign in failed")
             }
         }
+    }
+
+    private suspend fun syncUserProfile(user: AuthUser, gender: String? = null) {
+        val existing = userProfileRepo.getProfile()
+        val displayName = user.displayName.ifBlank { user.email.substringBefore("@").ifBlank { "Athlete" } }
+        val updated = if (existing == null) {
+            UserProfileEntity(
+                firebaseUid = user.uid,
+                fullName = displayName,
+                email = user.email,
+                photoUrl = user.photoUrl,
+                heightCm = 170f,
+                weightKg = 68f,
+                age = 25,
+                gender = gender ?: "Not specified",
+                dailyStepGoal = 6000
+            )
+        } else {
+            existing.copy(
+                firebaseUid = user.uid,
+                fullName = displayName,
+                email = user.email.ifBlank { existing.email },
+                photoUrl = user.photoUrl ?: existing.photoUrl,
+                gender = gender ?: existing.gender,
+                updatedAt = System.currentTimeMillis()
+            )
+        }
+        userProfileRepo.saveProfile(updated)
     }
 }

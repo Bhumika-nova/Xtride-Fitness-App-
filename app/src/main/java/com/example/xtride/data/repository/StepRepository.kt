@@ -2,30 +2,59 @@ package com.example.xtride.data.repository
 
 import com.example.xtride.data.local.dao.DailyStepsDao
 import com.example.xtride.data.local.entity.DailyStepsEntity
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 
-class StepRepository(private val dailyStepsDao: DailyStepsDao) {
-    fun observeTodaySteps(todayDate: String): Flow<DailyStepsEntity?> {
-        return dailyStepsDao.observeTodaySteps(todayDate)
+class StepRepository(
+    private val dailyStepsDao: DailyStepsDao,
+    private val userProfileRepo: UserProfileRepository? = null
+) {
+    private suspend fun getCurrentUserId(): String {
+        return userProfileRepo?.getProfile()?.firebaseUid?.ifBlank { "offline_athlete" } ?: "offline_athlete"
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun observeTodaySteps(todayDate: String): Flow<DailyStepsEntity?> {
+        return if (userProfileRepo != null) {
+            userProfileRepo.activeUserProfile.flatMapLatest { profile ->
+                val uid = profile?.firebaseUid?.ifBlank { "offline_athlete" } ?: "offline_athlete"
+                dailyStepsDao.observeTodaySteps(uid, todayDate)
+            }
+        } else {
+            dailyStepsDao.observeTodaySteps("offline_athlete", todayDate)
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun observeRecent35Days(): Flow<List<DailyStepsEntity>> {
-        return dailyStepsDao.observeRecent35Days()
+        return if (userProfileRepo != null) {
+            userProfileRepo.activeUserProfile.flatMapLatest { profile ->
+                val uid = profile?.firebaseUid?.ifBlank { "offline_athlete" } ?: "offline_athlete"
+                dailyStepsDao.observeRecent35Days(uid)
+            }
+        } else {
+            dailyStepsDao.observeRecent35Days("offline_athlete")
+        }
     }
 
     suspend fun getTodayStepsDirect(todayDate: String): DailyStepsEntity? {
-        return dailyStepsDao.getTodayStepsDirect(todayDate)
+        val uid = getCurrentUserId()
+        return dailyStepsDao.getTodayStepsDirect(uid, todayDate)
     }
 
     suspend fun saveTodaySteps(dailySteps: DailyStepsEntity) {
-        dailyStepsDao.insertOrUpdateDailySteps(dailySteps)
+        val uid = getCurrentUserId()
+        dailyStepsDao.insertOrUpdateDailySteps(dailySteps.copy(userId = uid))
     }
 
     suspend fun updateTodayGoal(todayDate: String, newGoal: Int) {
-        val existing = dailyStepsDao.getTodayStepsDirect(todayDate)
+        val uid = getCurrentUserId()
+        val existing = dailyStepsDao.getTodayStepsDirect(uid, todayDate)
         if (existing == null) {
             dailyStepsDao.insertOrUpdateDailySteps(
                 DailyStepsEntity(
+                    userId = uid,
                     date = todayDate,
                     stepsCount = 0,
                     rawSensorOffset = -1, // -1 denotes uncalibrated offset
@@ -33,12 +62,13 @@ class StepRepository(private val dailyStepsDao: DailyStepsDao) {
                 )
             )
         } else {
-            dailyStepsDao.updateTodayGoal(todayDate, newGoal)
+            dailyStepsDao.updateTodayGoal(uid, todayDate, newGoal)
         }
     }
 
     suspend fun resetTodaySteps(todayDate: String) {
-        val existing = dailyStepsDao.getTodayStepsDirect(todayDate)
+        val uid = getCurrentUserId()
+        val existing = dailyStepsDao.getTodayStepsDirect(uid, todayDate)
         if (existing != null) {
             dailyStepsDao.insertOrUpdateDailySteps(
                 existing.copy(
@@ -54,9 +84,11 @@ class StepRepository(private val dailyStepsDao: DailyStepsDao) {
     }
 
     suspend fun addSteps(todayDate: String, increment: Int, goal: Int = 6000): DailyStepsEntity {
-        val existing = dailyStepsDao.getTodayStepsDirect(todayDate)
+        val uid = getCurrentUserId()
+        val existing = dailyStepsDao.getTodayStepsDirect(uid, todayDate)
         val updated = if (existing == null) {
             DailyStepsEntity(
+                userId = uid,
                 date = todayDate,
                 stepsCount = increment,
                 rawSensorOffset = -1,
@@ -72,16 +104,13 @@ class StepRepository(private val dailyStepsDao: DailyStepsDao) {
         return updated
     }
 
-    /**
-     * Calibrates Android's Sensor.TYPE_STEP_COUNTER against the midnight / launch baseline.
-     * Android returns the lifetime steps since the device turned on.
-     * When uncalibrated (offset <= 0), offset is set to rawSensorSteps so today's steps start at 0.
-     */
     suspend fun processRawSensorSteps(todayDate: String, rawSensorSteps: Int, targetGoal: Int): DailyStepsEntity {
-        val existing = dailyStepsDao.getTodayStepsDirect(todayDate)
+        val uid = getCurrentUserId()
+        val existing = dailyStepsDao.getTodayStepsDirect(uid, todayDate)
         val updated = if (existing == null || existing.rawSensorOffset <= 0) {
-            // Calibrate baseline: rawSensorSteps is the starting count for today
+            // Calibrate baseline: rawSensorSteps is the starting count for today for this user
             DailyStepsEntity(
+                userId = uid,
                 date = todayDate,
                 stepsCount = 0,
                 rawSensorOffset = rawSensorSteps,
@@ -90,7 +119,6 @@ class StepRepository(private val dailyStepsDao: DailyStepsDao) {
             )
         } else {
             val stepsToday = if (rawSensorSteps < existing.rawSensorOffset) {
-                // Device reboot detected: raw counter reset to 0
                 existing.stepsCount + rawSensorSteps
             } else {
                 rawSensorSteps - existing.rawSensorOffset

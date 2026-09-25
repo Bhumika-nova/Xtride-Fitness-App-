@@ -78,6 +78,7 @@ fun HomeScreen(
                 )
 
                 // Athlete Monogram Avatar (Directs to Profile page when clicked)
+                val initialLetter = uiState.userName.trim().firstOrNull()?.uppercase() ?: "A"
                 Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -87,7 +88,7 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = uiState.userName.take(1).uppercase(),
+                        text = initialLetter,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         fontStyle = FontStyle.Italic,
