@@ -9,6 +9,7 @@ import com.example.xtride.data.local.AppDatabase
 import com.example.xtride.data.repository.AuthRepository
 import com.example.xtride.data.repository.StepRepository
 import com.example.xtride.data.repository.UserProfileRepository
+import com.example.xtride.data.repository.WorkoutRepository
 import com.example.xtride.data.sensor.StepSensorManager
 import com.example.xtride.feature.auth.AuthFlow
 import com.example.xtride.feature.auth.AuthViewModel
@@ -32,6 +33,7 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getInstance(applicationContext)
         val userProfileRepo = UserProfileRepository(database.userProfileDao())
         val stepRepo = StepRepository(database.dailyStepsDao())
+        val workoutRepo = WorkoutRepository(database.workoutDao())
         val authRepo = AuthRepository()
         val sensorManager = StepSensorManager(applicationContext)
 
@@ -63,6 +65,7 @@ class MainActivity : ComponentActivity() {
                     MainScaffold(
                         stepRepo = stepRepo,
                         userProfileRepo = userProfileRepo,
+                        workoutRepo = workoutRepo,
                         sensorManager = sensorManager
                     )
                 } else {

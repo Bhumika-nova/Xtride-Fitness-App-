@@ -13,17 +13,20 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.xtride.data.repository.StepRepository
 import com.example.xtride.data.repository.UserProfileRepository
+import com.example.xtride.data.repository.WorkoutRepository
 import com.example.xtride.data.sensor.StepSensorManager
 import com.example.xtride.feature.home.HomeScreen
 import com.example.xtride.feature.home.HomeViewModel
 import com.example.xtride.feature.placeholder.AnalyticsScreenPlaceholder
 import com.example.xtride.feature.placeholder.ProfileScreenPlaceholder
-import com.example.xtride.feature.placeholder.WorkoutScreenPlaceholder
+import com.example.xtride.feature.workout.WorkoutScreen
+import com.example.xtride.feature.workout.WorkoutViewModel
 
 @Composable
 fun MainScaffold(
     stepRepo: StepRepository,
     userProfileRepo: UserProfileRepository,
+    workoutRepo: WorkoutRepository,
     sensorManager: StepSensorManager?
 ) {
     val navController = rememberNavController()
@@ -36,6 +39,10 @@ fun MainScaffold(
             userProfileRepo = userProfileRepo,
             sensorManager = sensorManager
         )
+    }
+
+    val workoutViewModel = remember {
+        WorkoutViewModel(workoutRepo = workoutRepo)
     }
 
     val screens = listOf(
@@ -107,7 +114,9 @@ fun MainScaffold(
                     }
                 )
             }
-            composable(Screen.Workout.route) { WorkoutScreenPlaceholder() }
+            composable(Screen.Workout.route) {
+                WorkoutScreen(viewModel = workoutViewModel)
+            }
             composable(Screen.Analytics.route) { AnalyticsScreenPlaceholder() }
             composable(Screen.Profile.route) { ProfileScreenPlaceholder() }
         }
