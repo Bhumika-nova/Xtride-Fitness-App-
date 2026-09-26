@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notification_collapsed_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_notification_container"
+    android:padding="12dp">
+
+    <!-- Top Header Bar: Title (no X emoji/sign) & GPS Status Pill -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_collapsed_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="xtride • Outdoor Run"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <!-- GPS Active Pill -->
+        <TextView
+            android:id="@+id/tv_collapsed_gps_active"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_gps_active_pill"
+            android:paddingLeft="8dp"
+            android:paddingTop="2dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="2dp"
+            android:text="● GPS Active"
+            android:textColor="#34D399"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <!-- GPS Paused Pill -->
+        <TextView
+            android:id="@+id/tv_collapsed_gps_paused"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_gps_paused_pill"
+            android:paddingLeft="8dp"
+            android:paddingTop="2dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="2dp"
+            android:text="● Paused"
+            android:textColor="#94A3B8"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Compact Stats Row: Distance | Time | Pace -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_collapsed_distance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0.00 km"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_collapsed_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="00:00"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_collapsed_pace"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="--:-- /km"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.xtride.data.repository.AuthRepository
+import com.example.xtride.data.repository.RunRepository
 import com.example.xtride.data.repository.StepRepository
 import com.example.xtride.data.repository.UserProfileRepository
 import com.example.xtride.data.repository.WorkoutRepository
@@ -22,6 +23,8 @@ import com.example.xtride.feature.home.HomeScreen
 import com.example.xtride.feature.home.HomeViewModel
 import com.example.xtride.feature.profile.ProfileScreen
 import com.example.xtride.feature.profile.ProfileViewModel
+import com.example.xtride.feature.run.RunScreen
+import com.example.xtride.feature.run.RunViewModel
 import com.example.xtride.feature.workout.WorkoutScreen
 import com.example.xtride.feature.workout.WorkoutViewModel
 
@@ -30,8 +33,12 @@ fun MainScaffold(
     stepRepo: StepRepository,
     userProfileRepo: UserProfileRepository,
     workoutRepo: WorkoutRepository,
+    runRepo: RunRepository,
     sensorManager: StepSensorManager?,
     authRepo: AuthRepository? = null,
+    targetTab: String? = null,
+    showFinishPrompt: Boolean = false,
+    onFinishPromptHandled: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -44,6 +51,10 @@ fun MainScaffold(
             userProfileRepo = userProfileRepo,
             sensorManager = sensorManager
         )
+    }
+
+    val runViewModel = remember {
+        RunViewModel(runRepo = runRepo)
     }
 
     val workoutViewModel = remember {
@@ -66,10 +77,29 @@ fun MainScaffold(
 
     val screens = listOf(
         Screen.Home,
+        Screen.Track,
         Screen.Workout,
         Screen.Analytics,
         Screen.Profile
     )
+
+    LaunchedEffect(targetTab, showFinishPrompt) {
+        if (targetTab == "TRACK" || showFinishPrompt) {
+            if (currentRoute != Screen.Track.route) {
+                navController.navigate(Screen.Track.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            if (showFinishPrompt) {
+                runViewModel.showStopConfirmation(true)
+            }
+            onFinishPromptHandled()
+        }
+    }
 
     Scaffold(
         containerColor = Color(0xFF040711),
@@ -132,6 +162,9 @@ fun MainScaffold(
                         }
                     }
                 )
+            }
+            composable(Screen.Track.route) {
+                RunScreen(viewModel = runViewModel)
             }
             composable(Screen.Workout.route) {
                 WorkoutScreen(viewModel = workoutViewModel)

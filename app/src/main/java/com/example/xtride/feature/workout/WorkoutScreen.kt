@@ -11,11 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.xtride.feature.workout.components.ExerciseSelectorGrid
@@ -51,43 +47,22 @@ fun WorkoutScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Top Brand Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Screen Header
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color(0xFFE11D48),
-                                fontWeight = FontWeight.Black,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 32.sp
-                            )
-                        ) {
-                            append("x")
-                        }
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color.White,
-                                fontWeight = FontWeight.Black,
-                                fontStyle = FontStyle.Italic,
-                                fontSize = 32.sp
-                            )
-                        ) {
-                            append("tride")
-                        }
-                    }
+                    text = "Strength & Training",
+                    color = Color(0xFF64748B),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp
                 )
-
                 Text(
-                    text = "WORKOUT TRACKER",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFE11D48),
-                    letterSpacing = 2.sp
+                    text = "Workout Tracker",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
 

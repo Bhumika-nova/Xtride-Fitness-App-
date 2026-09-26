@@ -1,6 +1,8 @@
 package com.example.xtride.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
@@ -21,6 +23,12 @@ sealed class Screen(
         title = "Home",
         selectedIcon = Icons.Filled.Home,
         unselectedIcon = Icons.Outlined.Home
+    )
+    object Track : Screen(
+        route = "track",
+        title = "Track",
+        selectedIcon = Icons.Filled.Timeline,
+        unselectedIcon = Icons.Outlined.Timeline
     )
     object Workout : Screen(
         route = "workout",

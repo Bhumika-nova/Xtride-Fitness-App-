@@ -21,7 +21,7 @@ import com.example.xtride.data.local.entity.WorkoutEntity
         RunSessionEntity::class,
         RoutePointEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
