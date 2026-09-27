@@ -1,4 +1,4 @@
-# ⚡ xtride — Offline-First Android Fitness & Outdoor Tracking Engine
+# xtride — Offline-First Android Fitness & Outdoor Tracking Engine
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" />
