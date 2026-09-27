@@ -1,106 +1,68 @@
-XTRIDE — Android Fitness Tracker
-
-Run. Walk. Lift. Tracked entirely by your phone
-
-It is designed to track running, walking, hiking, and gym workouts without requiring a smartwatch, fitness band, or other wearable device.
-
-The app uses the hardware already available in a smartphone, including GPS, barometric pressure sensors, and motion accelerometers, to provide activity tracking and workout analytics.
-
-KEY FEATURES
-
-Live Outdoor Activity Tracking
-
-• Run, Walk, and Hike tracking
-• Real-time GPS route tracking
-• Live route visualization on a map
-• Phone-in-pocket cadence tracking using the accelerometer
-• Steps-per-minute (SPM) tracking for running
-• Elevation gain measurement using the phone's barometric pressure sensor
-• Instant kilometer splits
-• Ability to switch between Walk, Run, and Hike activities
-
-Gym and Strength Tracking
-
-• Quick workout logging without extensive typing
-• Stepper controls for quickly entering weights, sets, and repetitions
-• Automatic workout volume calculation using Sets × Reps × Weight
-• Hybrid workouts that combine outdoor activities with gym sessions
-
-Visual Analytics and Performance Tracking
-
-• Interactive 7-day activity and mileage chart
-• Daily activity visualization
-• Daily goal indicator
-• Workout notes and duration for individual days
-• Total distance tracking
-• Average running pace
-• Total elevation climbed
-• Total gym weight lifted
-• Filtering by All, Run, Walk, and Gym activities
-
-Personal Records
-
-xtride tracks personal milestones and displays them as achievement records.
-
-• Fastest 5K
-• Longest outdoor journey
-• Maximum Squat weight
-• Maximum Bench Press weight
-• Peak elevation
-
-Daily Activity and Streak Tracking
-
-• Active streak counter
-• Increasing visual intensity based on daily step count
-
-Offline and Private
-
-• Works without an internet connection
-• Workout data and history are stored locally on the device
-• Routes and workout records are stored using Room and SQLite
-• Workout saving is designed to work without loading delays or network dependency
-• GPS routes and health data remain on the device and are not uploaded or sold to third party advertising networks
-
-## 📱 UI Screens
+# ⚡ xtride — Offline-First Android Fitness & Outdoor Tracking Engine
 
 <p align="center">
-  <img src="Clip%20path%20group.png" width="200">
-  <img src="Clip%20path%20group-1.png" width="200">
-  <img src="Clip%20path%20group-2.png" width="200">
-  <img src="Clip%20path%20group-3.png" width="200">
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" />
+  <img src="https://img.shields.io/badge/Language-Kotlin%202.2-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" />
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" />
+  <img src="https://img.shields.io/badge/Database-Room%20SQLite-00599C?style=for-the-badge&logo=sqlite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Design-Obsidian%20%26%20Crimson-E11D48?style=for-the-badge" />
 </p>
 
-TECHNOLOGY STACK
 
-Language:
-Kotlin 2.0
+## Features
 
-Asynchronous Programming:
-Coroutines
-Flow
-StateFlow
+### 1. Hardware Step Counter & Daily Dashboard (`Home`)
+- **Real-Time Step Detection**: Integrates hardware `Sensor.TYPE_STEP_COUNTER` and `Sensor.TYPE_STEP_DETECTOR` with zero-battery-drain background listeners.
+- **Dynamic Circular Progress Meter**: Visualizes daily step goal completion with live percentage calculations.
+- **Daily Telemetry**: Automatically derives distance covered (km), active calories burned (kcal), and active time (minutes) from biometric height/weight ratios.
+- **Interactive Goal Editor**: Persistent bottom sheet for customizing daily step targets.
+- **Activity Heatmap**: GitHub-style weekly contribution grid showing daily milestone consistency.
 
-UI:
-Jetpack Compose
-Material 3
+### 2. Live Outdoor GPS Engine (`Track`)
+- **Multi-Activity Engine**: Seamlessly tracks **Walk**, **Run**, and **Mountain Hike** sessions.
+- **Foreground Tracking Service**: Fully compliant with **Android 14+** (`FOREGROUND_SERVICE_TYPE_LOCATION`) to guarantee uninterrupted background GPS updates.
+- **Zero-API-Key Map Rendering**: Utilizes high-performance **CyclOSM** vector-grade trail tiles with a custom Obsidian dark matrix color filter.
+- **Live Trailing Polyline**: Real-time Crimson glowing route line with custom high-contrast location marker, auto-follow camera, and instant recenter controls.
+- **Real-Time Telemetry HUD**:
+  - Distance (km)
+  - Elapsed Time (`MM:SS` / `HH:MM:SS`)
+  - Activity-Specific Pace (`Running`, `Walking`, or `Hiking` in `/km`)
+  - Cadence (live Strides Per Minute - SPM)
+- **Custom Dark Notification**: Rich foreground notification featuring an interactive `● GPS Active` / `● Paused` pill, real-time telemetry card, and direct **Pause / Resume** & **Finish** controls.
+- **Categorized History**: Filter historical sessions by `All`, `Walk`, `Run`, or `Hike` with complete telemetry metrics, date stamps, and deletion options.
 
-Architecture:
-Clean Architecture
-MVI / MVVM
-Unidirectional Data Flow
+###  3. Strength & Resistance Workout Tracker (`Workout`)
+- **Exercise Presets**: Quick selection for Squats, Bench Press, Deadlifts, Pull-Ups, Overhead Press, Barbell Rows, plus custom movement entry.
+- **Precision Stepper Controls**: Rapid adjustment cards for **Weight (kg)** (with `±2.5kg` and `±5kg` deltas), **Reps**, and **Sets**.
+- **Real-Time Volume Calculator**: Instant preview of total session tonnage (`Sets × Reps × Weight`).
+- **Offline History Logs**: Detailed log of past strength training sessions grouped chronologically.
 
-Local Storage:
-Room Database
-SQLite
+### 4. Performance Analytics & Reports (`Analytics`)
+- **Time Range Filtering**: Analyze consistency over **7-Day** and **30-Day** rolling windows.
+- **Interactive Custom Canvas Chart**: Smooth vertical bar chart visualizing daily activity volume with peak-day highlights.
+- **Metric Highlights**: Total steps, daily average, personal best record, and cumulative workout volume.
+- **Daily Breakdown List**: Day-by-day record of milestone status and total activity counts.
 
-Location:
-Google Play Services FusedLocationProviderClient
-Background Foreground Service
+### 5. Health Profile & Multi-User Isolation (`Profile`)
+- **BMI Calculator & Visual Gauge**: Real-time calculation supporting both Metric and Imperial units with standard classification bands (Underweight, Normal, Overweight, Obese).
+- **Biometric Profiles**: Stores height, weight, age, gender, and personal step targets.
+- **Firebase Authentication**: Email/Password and Google Sign-In with 100% on-device Room isolation mapped directly to the active user's UUID.
 
-Device Sensors:
-Android SensorManager
-TYPE_PRESSURE for elevation tracking
-TYPE_ACCELEROMETER for cadence tracking
+---
 
-Dependency Injection:
-Dagger Hilt
+## Tech Stack & Libraries
+
+| Category | Technology |
+|---|---|
+| **Language** | Kotlin 2.2 |
+| **UI Framework** | Jetpack Compose (Material 3) |
+| **Design System** | Custom Obsidian Dark (`#040711`) + Crimson Red (`#E11D48`) |
+| **Local Persistence** | Room SQLite (Multi-table schema with Foreign Keys) |
+| **Asynchronous Engine**| Kotlin Coroutines & Reactive StateFlow |
+| **Location Services** | Google Play Services (`FusedLocationProviderClient`) |
+| **Map Rendering** | OSMDroid + CyclOSM Tile Engine |
+| **Authentication** | Firebase Authentication & Google One Tap Sign-In |
+| **Sensors** | Android Sensor Framework (Step Counter & Accelerometer) |
+| **Build System** | Gradle 9.3 + Kotlin Symbol Processing (KSP) |
+
+---
